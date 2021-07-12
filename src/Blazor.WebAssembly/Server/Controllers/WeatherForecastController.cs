@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace Blazor.WebAssembly.Server.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("blazorwebassembly/[controller]")]
     public class WeatherForecastController : ControllerBase
     {
         private static readonly string[] Summaries = new[]

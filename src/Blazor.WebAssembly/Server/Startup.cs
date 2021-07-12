@@ -45,18 +45,34 @@ namespace Blazor.WebAssembly.Server
                 app.UseExceptionHandler("/Error");
             }
 
-            app.UseBlazorFrameworkFiles();
-            app.UseStaticFiles();
-
-            app.UseRouting();
-
-            app.UseEndpoints(endpoints =>
+            app.MapWhen(ctx => ctx.Request.Path.StartsWithSegments("/blazorwebassembly"), first =>
             {
-                endpoints.MapRazorPages();
-                endpoints.MapControllers();
-                endpoints.MapHub<ChatHub>("/chathub");
-                endpoints.MapFallbackToFile("index.html");
+                first.UseBlazorFrameworkFiles("/blazorwebassembly");
+                first.UseStaticFiles();
+
+                first.UseRouting();
+                first.UseEndpoints(endpoints =>
+                {
+                    endpoints.MapControllers();
+                    endpoints.MapHub<ChatHub>("blazorwebassembly/chathub");
+                    endpoints.MapFallbackToFile("blazorwebassembly/{*path:nonfile}", "blazorwebassembly/index.html");
+                });
             });
+            ////1. 设置路径前缀为
+            //app.UseBlazorFrameworkFiles("/blazorwebassembly");
+            //app.UseStaticFiles();
+            ////2. 可访问wwwroot/mou目录下的静态文件
+            ////app.UseStaticFiles("/blazorwebassembly");
+            //app.UseRouting();
+
+            //app.UseEndpoints(endpoints =>
+            //{
+            //    //endpoints.MapRazorPages();
+            //    endpoints.MapControllers();
+            //    endpoints.MapHub<ChatHub>("/chathub");
+            //    //路由不匹配时回退到哪里
+            //    endpoints.MapFallbackToFile("index.html");
+            //});
         }
     }
 }

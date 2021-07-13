@@ -1,0 +1,58 @@
+name: createblazorwebassembly
+env:
+  DOCKER_REG: registry.cn-shanghai.aliyuncs.com/gen_dockerimage/blazorwebassembly
+  REG: registry.cn-shanghai.aliyuncs.com
+on:
+  push:
+    branches: [ main ]
+    
+  workflow_dispatch:
+    inputs:
+       Version:
+        description: 'Version to input'
+        required: true
+        default: 'v1.0.0'
+jobs:
+  build:
+
+    runs-on: ubuntu-20.04
+    outputs:
+      version: ${{ steps.get_version.outputs.VERSION }}
+    steps:
+    - uses: actions/checkout@v2
+    - name: login docker
+      run: 
+        echo "${{ secrets.PASSWORD }}" | docker login $REG --username "${{ secrets.USERNAME }}" --password-stdin
+    - name: Build the Docker image
+      run:
+        docker build . --file src/Blazor.WebAssembly/Server/Dockerfile --no-cache --tag blazorwebassemblyimage
+    - name: Get version
+      id: get_version
+      run: |
+        time=$(date '+%Y%m%d%H%M%S')
+        echo $time
+        VERSION=${{ github.event.inputs.Version }}
+        [ "$VERSION" == "" ] && VERSION="$time"
+        echo ::set-output name=VERSION::"$VERSION"
+    - name: push image
+      run: |
+        docker tag blazorwebassemblyimage $DOCKER_REG:${{ steps.get_version.outputs.version }}
+        docker push $DOCKER_REG:${{ steps.get_version.outputs.version }}
+  deploy:
+    runs-on: ubuntu-20.04
+    needs: build
+    env:
+      CONTAINER_NAME: blazorwebassembly-app
+    steps:
+    - name: deploy docker image
+      uses: appleboy/ssh-action@v0.0.7
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.HOST_USERNAME }}
+        password: ${{ secrets.HOST_PASSWORD }}
+        port:  22
+        envs: CONTAINER_NAME, DOCKER_REG, REG
+        script: |
+          if [ $(docker ps -a | grep -c $CONTAINER_NAME) -gt 0 ]; then docker stop $CONTAINER_NAME;docker rm $CONTAINER_NAME;fi
+          echo "${{ secrets.PASSWORD }}" | docker login $REG --username "${{ secrets.USERNAME }}" --password-stdin
+          docker run --name $CONTAINER_NAME -d -p 8085:8085 $DOCKER_REG:${{ needs.build.outputs.version }}

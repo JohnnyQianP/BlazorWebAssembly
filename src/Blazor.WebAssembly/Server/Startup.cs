@@ -45,13 +45,14 @@ namespace Blazor.WebAssembly.Server
                 app.UseExceptionHandler("/Error");
             }
 
-            app.MapWhen(ctx => ctx.Request.Path.StartsWithSegments("/blazorwebassembly"), first =>
+            app.MapWhen(ctx => ctx.Request.Path.StartsWithSegments("/blazorwebassembly"), app =>
             {
-                first.UseBlazorFrameworkFiles("/blazorwebassembly");
-                first.UseStaticFiles();
+                app.UseBlazorFrameworkFiles("/blazorwebassembly");
+                app.UseStaticFiles();
 
-                first.UseRouting();
-                first.UseEndpoints(endpoints =>
+                app.UseStaticFiles("/blazorwebassembly");
+                app.UseRouting();
+                app.UseEndpoints(endpoints =>
                 {
                     endpoints.MapControllers();
                     endpoints.MapHub<ChatHub>("blazorwebassembly/chathub");

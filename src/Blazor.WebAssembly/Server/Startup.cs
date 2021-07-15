@@ -34,6 +34,7 @@ namespace Blazor.WebAssembly.Server
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            app.UsePathBase("/blazorwebassembly");
             app.UseResponseCompression();
             if (env.IsDevelopment())
             {
@@ -45,35 +46,33 @@ namespace Blazor.WebAssembly.Server
                 app.UseExceptionHandler("/Error");
             }
 
-            app.MapWhen(ctx => ctx.Request.Path.StartsWithSegments("/blazorwebassembly"), app =>
-            {
-                app.UseBlazorFrameworkFiles("/blazorwebassembly");
-                app.UseStaticFiles();
-
-                app.UseStaticFiles("/blazorwebassembly");
-                app.UseRouting();
-                app.UseEndpoints(endpoints =>
-                {
-                    endpoints.MapControllers();
-                    endpoints.MapHub<ChatHub>("blazorwebassembly/chathub");
-                    endpoints.MapFallbackToFile("blazorwebassembly/{*path:nonfile}", "blazorwebassembly/index.html");
-                });
-            });
-            ////1. 设置路径前缀为
-            //app.UseBlazorFrameworkFiles("/blazorwebassembly");
-            //app.UseStaticFiles();
-            ////2. 可访问wwwroot/mou目录下的静态文件
-            ////app.UseStaticFiles("/blazorwebassembly");
-            //app.UseRouting();
-
-            //app.UseEndpoints(endpoints =>
+            //app.MapWhen(ctx => ctx.Request.Path.StartsWithSegments("/blazorwebassembly"), app =>
             //{
-            //    //endpoints.MapRazorPages();
-            //    endpoints.MapControllers();
-            //    endpoints.MapHub<ChatHub>("/chathub");
-            //    //路由不匹配时回退到哪里
-            //    endpoints.MapFallbackToFile("index.html");
+            //    app.UseBlazorFrameworkFiles("/blazorwebassembly");
+            //    app.UseStaticFiles();
+
+            //    app.UseStaticFiles("/blazorwebassembly");
+            //    app.UseRouting();
+            //    app.UseEndpoints(endpoints =>
+            //    {
+            //        endpoints.MapControllers();
+            //        endpoints.MapHub<ChatHub>("blazorwebassembly/chathub");
+            //        endpoints.MapFallbackToFile("blazorwebassembly/{*path:nonfile}", "blazorwebassembly/index.html");
+            //    });
             //});
+
+            app.UseBlazorFrameworkFiles("/blazorwebassembly");
+            app.UseStaticFiles();
+
+            app.UseStaticFiles("/blazorwebassembly");
+            app.UseRouting();
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapRazorPages();
+                endpoints.MapControllers();
+                endpoints.MapHub<ChatHub>("/chathub");
+                endpoints.MapFallbackToFile("blazorwebassembly/{*path:nonfile}", "blazorwebassembly/index.html");
+            });
         }
     }
 }

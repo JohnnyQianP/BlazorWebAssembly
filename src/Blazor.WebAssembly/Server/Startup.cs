@@ -34,7 +34,7 @@ namespace Blazor.WebAssembly.Server
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            app.UsePathBase("/blazorwebassembly");
+            //app.UsePathBase("/blazorwebassembly");
             app.UseResponseCompression();
             if (env.IsDevelopment())
             {
@@ -70,7 +70,7 @@ namespace Blazor.WebAssembly.Server
             {
                 endpoints.MapRazorPages();
                 endpoints.MapControllers();
-                endpoints.MapHub<ChatHub>("/chathub");
+                endpoints.MapHub<ChatHub>("/blazorwebassembly/chathub");
                 endpoints.MapFallbackToFile("blazorwebassembly/{*path:nonfile}", "blazorwebassembly/index.html");
             });
         }

@@ -1,4 +1,5 @@
 using Blazor.WebAssembly.Server.Hubs;
+using Blazor.WebAssembly.Server.Service;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.ResponseCompression;
@@ -6,6 +7,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.Linq;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System;
+using System.Security.Claims;
+using System.Text;
 
 namespace Blazor.WebAssembly.Server
 {
@@ -25,8 +31,28 @@ namespace Blazor.WebAssembly.Server
             services.AddSignalR();
             services.AddControllersWithViews();
             services.AddRazorPages();
+            services.AddTransient<ITokenService, TokenService>();
 
-            services.AddResponseCompression(opt => {
+            services
+               .AddAuthentication(authentication =>
+               {
+                   authentication.DefaultAuthenticateScheme = "Bearer";
+                   authentication.DefaultChallengeScheme = "Bearer";
+               }).AddJwtBearer("Bearer", bearer =>
+               {
+                   bearer.RequireHttpsMetadata = false;
+                   bearer.SaveToken = true;
+                   bearer.TokenValidationParameters = new TokenValidationParameters
+                   {
+                       ValidateIssuerSigningKey = true,
+                       IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes("qazwsxedcDH823J$5DSGS!@$g")),
+                       ValidateIssuer = false,
+                       ValidateAudience = false,
+                       RoleClaimType = ClaimTypes.Role,
+                       ClockSkew = TimeSpan.Zero
+                   };
+               });
+                   services.AddResponseCompression(opt => {
                 opt.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[] { "application/octet-stream" });
             });
         }

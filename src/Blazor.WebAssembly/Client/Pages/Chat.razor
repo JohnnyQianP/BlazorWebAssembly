@@ -1,8 +1,9 @@
 ﻿@page "/chat"
+@attribute [Authorize(Roles = "Permissions.Chat.All")]
+
 <h3>Chat by WebAssembly</h3>
 
 @using Microsoft.AspNetCore.SignalR.Client
-@inject NavigationManager NavigationManager
 @implements IAsyncDisposable
 <div class="form-group">
     <label>
@@ -38,7 +39,7 @@
     protected override async Task OnInitializedAsync()
     {
         hubConnection = new HubConnectionBuilder()
-            .WithUrl(NavigationManager.ToAbsoluteUri("/blazorwebassembly/chathub"))
+            .WithUrl(Navigation.ToAbsoluteUri("/blazorwebassembly/chathub"))
             .Build();
 
         hubConnection.On<string, string>("ReceiveMessage", (user, message) =>

@@ -1,43 +1,46 @@
-﻿using Blazor.WebAssembly.Shared;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
+﻿using Blazor.WebAssembly.Shared.AuthModel;
+using Blazored.LocalStorage;
+using Microsoft.AspNetCore.Components.Authorization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace Blazor.WebAssembly.Server.Controllers
+namespace Blazor.WebAssembly.Client.Auth
 {
-    [ApiController]
-    [Route("blazorwebassembly/[controller]")]
-    public class WeatherForecastController : ControllerBase
+    public class DiyBlazorStateProvider : AuthenticationStateProvider
     {
-        private static readonly string[] Summaries = new[]
-        {
-            "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-        };
+        private readonly ILocalStorageService _localStorage;
+        private readonly HttpClient _httpClient;
 
-        private readonly ILogger<WeatherForecastController> logger;
-
-        public WeatherForecastController(ILogger<WeatherForecastController> logger)
+        public DiyBlazorStateProvider(ILocalStorageService localStorage, HttpClient httpClient)
         {
-            this.logger = logger;
+            _localStorage = localStorage;
+            _httpClient = httpClient;
         }
 
-        [HttpGet]
-        public IEnumerable<WeatherForecast> Get()
+        public async Task StateChangedAsync()
         {
-            //var xx = GetClaimsFromJwt("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoidXNlcjEiLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOlsiUGVybWlzc2lvbnMuQ291bnRlci5BbGwiLCJQZXJtaXNzaW9ucy5JbmRleC5BbGwiXSwiZXhwIjoxNjI2NzEzNDI2fQ.bUkxmNTyFyzEpoGgninydjwcbkJmrfXySSPRgLCR71U");
-            var rng = new Random();
-            return Enumerable.Range(1, 5).Select(index => new WeatherForecast
+            var authState = Task.FromResult(await GetAuthenticationStateAsync());
+
+            NotifyAuthenticationStateChanged(authState);
+
+        }
+
+        public override async Task<AuthenticationState> GetAuthenticationStateAsync()
+        {
+            var savedToken = await _localStorage.GetItemAsync<string>(StorageConstants.Local.AuthToken);
+            if (string.IsNullOrWhiteSpace(savedToken))
             {
-                Date = DateTime.Now.AddDays(index),
-                TemperatureC = rng.Next(-20, 55),
-                Summary = Summaries[rng.Next(Summaries.Length)]
-            })
-            .ToArray();
+                return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
+            }
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", savedToken);
+            var state = new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity(GetClaimsFromJwt(savedToken), "jwt")));
+            return state;
         }
 
         private IEnumerable<Claim> GetClaimsFromJwt(string jwt)

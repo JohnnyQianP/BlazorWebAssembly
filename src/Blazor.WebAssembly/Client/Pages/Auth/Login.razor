@@ -1,0 +1,42 @@
+﻿@page "/login"
+
+@using Microsoft.AspNetCore.Authorization;
+@layout MainLayout
+@attribute [AllowAnonymous]
+<div class="form-demo" style="padding:18% 26%">
+    <Card style="width:400px">
+        <CardBody>
+            <h5 class="card-title">Login</h5>
+            <EditForm Model="@_tokenModel" OnValidSubmit="SubmitAsync">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <div>
+                    <div class="row col-12">
+                        <div class="col-auto col-form-label">
+                            <span>姓名</span>
+                        </div>
+                        <div class="col-6">
+                            <BootstrapInput placeholder="姓名" TValue="string" @bind-Value="@_tokenModel.UserName" maxlength="50" style="width: 200px;" />
+                        </div>
+                    </div>
+                    <div class="row col-12">
+                        <div class="col-auto col-form-label">
+                            <span>密码</span>
+                        </div>
+                        <div class="col-6">
+                            <BootstrapInput TValue="string" placeholder="密码" type="password" @bind-Value="@_tokenModel.Password" maxlength="50" style="width: 200px;" />
+                        </div>
+                    </div>
+                </div>
+                <Button ButtonType="ButtonType.Submit" Icon="fa fa-save" Size="Size.Small" Text="提交" />
+                <p style="        color: red;
+        font-size: 13px;
+        margin: 10px 25px;
+        display: inline-block
+">@message</p>
+            </EditForm>
+        </CardBody>
+    </Card>
+</div>
+
+
